@@ -34,7 +34,7 @@ vet:
 
 .PHONY: test
 test: vet
-	$QCGO_ENABLED=1 go test $(GOTESTFLAGS) -race -coverpkg=$(`go list ./... | grep -v */mocks | grep -v cmd`) -coverprofile=.coverageprofile ./...
+	$QCGO_ENABLED=1 go test $(GOTESTFLAGS) -race -coverpkg=$(`go list ./... | grep -v */mocks | grep -v cmd | grep -v examples | grep -v tests`) -coverprofile=.coverageprofile ./...
 	go tool cover -func=.coverageprofile | grep total | awk '{print substr($$3, 1, length($$3) - 1)}' | awk '{if (!($$1 >= $(COVERAGE_THRESHOLD))) { print "Coverage: " $$1 "%" ", Excepted threshold: " $(COVERAGE_THRESHOLD) "%"; exit 1} else { print "Total coverage: " $$1 }}'
 	@echo Makefile target: go test
 
