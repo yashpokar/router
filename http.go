@@ -6,10 +6,10 @@ type method string
 
 const (
 	GET    method = "GET"
-	POST          = "POST"
-	PUT           = "PUT"
-	PATCH         = "PATCH"
-	DELETE        = "DELETE"
+	POST   method = "POST"
+	PUT    method = "PUT"
+	PATCH  method = "PATCH"
+	DELETE method = "DELETE"
 )
 
 func stringToMethod(name string) method {
