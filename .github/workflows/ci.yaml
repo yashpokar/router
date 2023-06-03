@@ -1,0 +1,29 @@
+name: Build
+
+on:
+  pull_request:
+    branches:
+      - master
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    name: 🔨 Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🌍 Setup Repository
+        uses: actions/checkout@v3
+
+      - name: 📦 Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.19'
+
+      - name: 🧹 Lint
+        uses: make lint
+
+      - name: 🧪 Test
+        uses: make test

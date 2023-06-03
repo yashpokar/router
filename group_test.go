@@ -1,7 +1,6 @@
 package router
 
 import (
-	"io"
 	"net/http"
 	"testing"
 
@@ -14,7 +13,11 @@ func TestGroup(t *testing.T) {
 	r := New()
 	api := r.Group("/api")
 
-	server := http.Server{Handler: r, Addr: ":8989"}
+	server := &http.Server{
+		Handler:           r,
+		Addr:              ":8989",
+		ReadHeaderTimeout: 1000,
+	}
 	go func() {
 		err := server.ListenAndServe()
 		assert.NoError(t, err)
@@ -53,16 +56,13 @@ func TestGroup(t *testing.T) {
 		response, err := http.Get("http://localhost:8989/api/v1/users/")
 		assert.NoError(t, err)
 		assert.Equal(t, http.StatusOK, response.StatusCode)
+		defer response.Body.Close()
 	})
 
 	t.Run("returns 404 status when the route does not exists for the uri", func(t *testing.T) {
 		response, err := http.Get("http://localhost:8989/api/v1/unknown/route")
-		defer func(Body io.ReadCloser) {
-			err := Body.Close()
-			assert.NoError(t, err)
-		}(response.Body)
-
 		assert.NoError(t, err)
 		assert.Equal(t, http.StatusNotFound, response.StatusCode)
+		defer response.Body.Close()
 	})
 }

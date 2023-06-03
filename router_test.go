@@ -3,6 +3,7 @@ package router
 import (
 	"errors"
 	"io"
+	"log"
 	"net/http"
 	"testing"
 
@@ -14,15 +15,21 @@ func ProductDetailsHandler(w http.ResponseWriter, r *http.Request) {
 	vars := Vars(r)
 	productID, ok := vars["product_id"]
 	if !ok {
-		w.Write([]byte("'product_id' not found"))
+		_, err := w.Write([]byte("'product_id' not found"))
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 
-	w.Write([]byte(productID))
+	_, err := w.Write([]byte(productID))
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func TestRouter(t *testing.T) {
 	r := New().(*router)
-	server := http.Server{Handler: r, Addr: ":8787"}
+	server := &http.Server{Handler: r, Addr: ":8787", ReadHeaderTimeout: 3000}
 	go func() {
 		err := server.ListenAndServe()
 		assert.NoError(t, err)
@@ -95,31 +102,25 @@ func TestRouter(t *testing.T) {
 		r.GET("/products/:product_id", ProductDetailsHandler)
 
 		response, err := http.Get("http://localhost:8787/products/8298ae5f-9cbf-4751-a411-560419b0b5d7")
+		assert.NoError(t, err)
+
 		bytes, err := io.ReadAll(response.Body)
 		assert.NoError(t, err)
 
-		defer func(Body io.ReadCloser) {
-			err := Body.Close()
-			assert.NoError(t, err)
-		}(response.Body)
-
 		assert.NoError(t, err)
 		assert.Equal(t, []byte("8298ae5f-9cbf-4751-a411-560419b0b5d7"), bytes)
+		defer response.Body.Close()
 	})
 
 	t.Run("can not return the product id when it is not there", func(t *testing.T) {
 		r.GET("/products", ProductDetailsHandler)
 
 		response, err := http.Get("http://localhost:8787/products")
+		assert.NoError(t, err)
+
 		bytes, err := io.ReadAll(response.Body)
 		assert.NoError(t, err)
-
-		defer func(Body io.ReadCloser) {
-			err := Body.Close()
-			assert.NoError(t, err)
-		}(response.Body)
-
-		assert.NoError(t, err)
 		assert.Equal(t, []byte("'product_id' not found"), bytes)
+		defer response.Body.Close()
 	})
 }
