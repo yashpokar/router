@@ -2,12 +2,23 @@ package router
 
 import (
 	"errors"
+	"io"
 	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/yashpokar/router/tests"
 )
+
+func ProductDetailsHandler(w http.ResponseWriter, r *http.Request) {
+	vars := Vars(r)
+	productID, ok := vars["product_id"]
+	if !ok {
+		w.Write([]byte("'product_id' not found"))
+	}
+
+	w.Write([]byte(productID))
+}
 
 func TestRouter(t *testing.T) {
 	r := New().(*router)
@@ -62,5 +73,53 @@ func TestRouter(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.Equal(t, "path/nested", route.path)
+	})
+
+	t.Run("returns the path variables map", func(t *testing.T) {
+		r.GET("/products/:product_id", tests.Handler)
+		route, err := r.resolve("GET", "products/8298ae5f-9cbf-4751-a411-560419b0b5d7")
+
+		assert.NoError(t, err)
+		assert.Equal(t, route.getPathVariablesMap(), map[string]string{"product_id": "8298ae5f-9cbf-4751-a411-560419b0b5d7"})
+	})
+
+	t.Run("returns nil when there are no path variables", func(t *testing.T) {
+		r.GET("/products", tests.Handler)
+		route, err := r.resolve("GET", "products")
+
+		assert.NoError(t, err)
+		assert.Nil(t, route.getPathVariablesMap())
+	})
+
+	t.Run("returns the product id using path variable", func(t *testing.T) {
+		r.GET("/products/:product_id", ProductDetailsHandler)
+
+		response, err := http.Get("http://localhost:8787/products/8298ae5f-9cbf-4751-a411-560419b0b5d7")
+		bytes, err := io.ReadAll(response.Body)
+		assert.NoError(t, err)
+
+		defer func(Body io.ReadCloser) {
+			err := Body.Close()
+			assert.NoError(t, err)
+		}(response.Body)
+
+		assert.NoError(t, err)
+		assert.Equal(t, []byte("8298ae5f-9cbf-4751-a411-560419b0b5d7"), bytes)
+	})
+
+	t.Run("can not return the product id when it is not there", func(t *testing.T) {
+		r.GET("/products", ProductDetailsHandler)
+
+		response, err := http.Get("http://localhost:8787/products")
+		bytes, err := io.ReadAll(response.Body)
+		assert.NoError(t, err)
+
+		defer func(Body io.ReadCloser) {
+			err := Body.Close()
+			assert.NoError(t, err)
+		}(response.Body)
+
+		assert.NoError(t, err)
+		assert.Equal(t, []byte("'product_id' not found"), bytes)
 	})
 }
