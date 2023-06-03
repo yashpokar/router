@@ -41,11 +41,19 @@ orders := v1.Group("/orders")
 orders.GET("/", ListOrders)
 orders.POST("/", PlaceOrder)
 orders.GET("/:orderId", GetOrder)
-orders.PUT("/:orderId", UpdateOrder)
-orders.DELETE("/:orderId", DeleteOrder)
+```
 
-returns := v1.Group("/returns")
-returns.GET("/:userId", ListReturnsByUserID)
-retutns.POST("/:orderId", ReturnOrder)
-retutns.GET("/:orderId", GetReturnDetails)
+## Path Variables
+```go
+func GetOrder(w http.ResponseWriter, r *http.Request) {
+    vars := router.Vars(r)
+    orderID := vars["orderId"]
+
+    // TODO : fetch order details
+    // TODO : send response
+}
+
+r := router.New()
+
+r.GET("/orders/:orderId", GetOrder)
 ```
