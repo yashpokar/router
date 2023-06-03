@@ -22,6 +22,7 @@ func newTree() Tree {
 func (t *tree) add(path string, route *route) {
 	root := t
 	segments := strings.Split(path, pathSeparator)
+	var variables []string
 
 	for idx := range segments {
 		segment := segments[idx]
@@ -30,29 +31,39 @@ func (t *tree) add(path string, route *route) {
 			root.children = map[string]*tree{}
 		}
 
+		if isVariable(segment) {
+			variable := strings.TrimLeft(segment, pathVariablePrefix)
+			variables = append(variables, variable)
+			segment = pathVariablePlaceholder
+		}
+
 		_, exists := root.children[segment]
 		if !exists {
 			root.children[segment] = &tree{}
 		}
-
 		root = root.children[segment]
 	}
 
+	route.variables = variables
 	root.route = route
 }
 
 func (t *tree) find(path string) (*route, error) {
 	root := t
 	segments := strings.Split(path, pathSeparator)
+	var values []string
 
 	for idx := range segments {
 		segment := segments[idx]
 
 		_, exists := root.children[segment]
 		if !exists {
-			return nil, &routeNotFoundError{path: path}
+			if _, exists = root.children[pathVariablePlaceholder]; !exists {
+				return nil, &routeNotFoundError{path: path}
+			}
+			values = append(values, segment)
+			segment = pathVariablePlaceholder
 		}
-
 		root = root.children[segment]
 	}
 
@@ -60,6 +71,7 @@ func (t *tree) find(path string) (*route, error) {
 		return nil, &routeNotFoundError{path: path}
 	}
 
+	root.route.variableValues = values
 	return root.route, nil
 }
 
@@ -72,11 +84,18 @@ func (t *tree) exists(path string) bool {
 
 		_, exists := root.children[segment]
 		if !exists {
-			return false
-		}
+			if _, exists = root.children[pathVariablePlaceholder]; !exists {
+				return false
+			}
 
+			segment = pathVariablePlaceholder
+		}
 		root = root.children[segment]
 	}
 
 	return root.route != nil
+}
+
+func isVariable(s string) bool {
+	return strings.HasPrefix(s, pathVariablePrefix)
 }

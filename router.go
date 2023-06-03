@@ -1,6 +1,7 @@
 package router
 
 import (
+	"context"
 	"net/http"
 	"strings"
 )
@@ -83,6 +84,10 @@ func (r *router) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	pathVariables := route.getPathVariablesMap()
+	ctx := request.Context()
+	ctx = context.WithValue(ctx, pathVariablesContextKey, pathVariables)
+	request = request.WithContext(ctx)
 	route.handler(writer, request)
 }
 

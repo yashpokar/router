@@ -24,7 +24,6 @@ func TestTree(t *testing.T) {
 	})
 
 	t.Run("returns error when no route define", func(t *testing.T) {
-
 		tree := newTree()
 		tree.add("/", indexRoute)
 
@@ -58,10 +57,41 @@ func TestTree(t *testing.T) {
 		assert.Nil(t, route)
 	})
 
+	t.Run("returns route (path variable)", func(t *testing.T) {
+		tree := newTree()
+		tree.add("/orders/:order_id", indexRoute)
+
+		route, err := tree.find("/orders/147db1c8-7ff2-4740-a6ba-0ba5761224ca")
+		assert.NoError(t, err)
+		assert.Equal(t, route, indexRoute)
+	})
+
 	t.Run("returns false when route is not define", func(t *testing.T) {
 		tree := newTree()
 
 		exists := tree.exists("/nested/path")
+		assert.False(t, exists)
+	})
+
+	t.Run("returns true when route is define (path variable)", func(t *testing.T) {
+		tree := newTree()
+		tree.add("/api/v1/users/:user_id", &route{
+			path:    "/api/v1/users/:user_id",
+			handler: tests.Handler,
+		})
+
+		exists := tree.exists("/api/v1/users/jhon")
+		assert.True(t, exists)
+	})
+
+	t.Run("returns false when variable path does not match", func(t *testing.T) {
+		tree := newTree()
+		tree.add("/api/v1/users/:user_id/edit", &route{
+			path:    "/api/v1/users/:user_id/edit",
+			handler: tests.Handler,
+		})
+
+		exists := tree.exists("/api/v1/users/jhon")
 		assert.False(t, exists)
 	})
 

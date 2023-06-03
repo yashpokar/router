@@ -1,5 +1,7 @@
 package router
 
 const (
-	pathSeparator = "/"
+	pathSeparator           = "/"
+	pathVariablePlaceholder = "@"
+	pathVariablePrefix      = ":"
 )
