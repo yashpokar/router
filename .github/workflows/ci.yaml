@@ -23,7 +23,7 @@ jobs:
           go-version: '1.19'
 
       - name: 🧹 Lint
-        uses: make lint
+        run: make lint
 
       - name: 🧪 Test
-        uses: make test
+        run: make test
