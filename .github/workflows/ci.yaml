@@ -24,7 +24,6 @@ jobs:
 
       - name: 🧹 Lint
         uses: golangci/golangci-lint-action@v3
-        run: make lint
 
       - name: 🧪 Test
         run: make test
