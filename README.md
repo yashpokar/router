@@ -103,3 +103,24 @@ r := router.New()
 
 r.GET("/private", IPCollectorMiddleware(AuthenticationMiddleware(PrivateHandler)))
 ```
+
+## Panic Recover
+
+```go
+
+// Handler that will panic
+func PanicMaker(w http.ResponseWriter, r *http.Request) {
+    panic("Devil inside the handler")
+}
+
+r := router.New()
+r.OnPanic(func(w http.ResponseWriter, r *http.Request, err any) {
+    w.WriteHeader(http.StatusInternalServerError)
+    w.Write([]byte("Internal server error."))
+
+    logger.Error(fmt.Sprintf("error occured at '%s'", r.RequestURI), err)
+    // ...
+})
+
+r.GET("/panic/maker", PanicMaker)
+```

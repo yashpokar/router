@@ -98,6 +98,13 @@ func TestRouter(t *testing.T) {
 		assert.Nil(t, route.getPathVariablesMap())
 	})
 
+	t.Run("returns error when route not found", func(t *testing.T) {
+		route, err := r.resolve("GET", "unknown/path")
+
+		assert.EqualError(t, err, "route 'unknown/path' not found")
+		assert.Nil(t, route)
+	})
+
 	t.Run("returns the product id using path variable", func(t *testing.T) {
 		r.GET("/products/:product_id", ProductDetailsHandler)
 
@@ -121,6 +128,23 @@ func TestRouter(t *testing.T) {
 		bytes, err := io.ReadAll(response.Body)
 		assert.NoError(t, err)
 		assert.Equal(t, []byte("'product_id' not found"), bytes)
+		defer response.Body.Close()
+	})
+
+	t.Run("can not return the product id when it is not there", func(t *testing.T) {
+		r.GET("/panic-maker", tests.PanicMaker)
+		r.OnPanic(func(w http.ResponseWriter, _ *http.Request, r any) {
+			w.WriteHeader(http.StatusInternalServerError)
+			_, _ = w.Write([]byte(r.(string)))
+		})
+
+		response, err := http.Get("http://localhost:8787/panic-maker")
+		assert.NoError(t, err)
+
+		bytes, err := io.ReadAll(response.Body)
+		assert.NoError(t, err)
+		assert.Equal(t, http.StatusInternalServerError, response.StatusCode)
+		assert.Equal(t, []byte("to test panic recovery"), bytes)
 		defer response.Body.Close()
 	})
 }
