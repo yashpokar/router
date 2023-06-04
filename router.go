@@ -20,12 +20,14 @@ type PanicHandler func(w http.ResponseWriter, r *http.Request, err any)
 type Router interface {
 	RouteRegistrar
 	OnPanic(handler PanicHandler)
+	OnRouteNotFound(handler http.HandlerFunc)
 	ServeHTTP(writer http.ResponseWriter, request *http.Request)
 }
 
 type router struct {
-	registry     map[method]Tree
-	panicHandler PanicHandler
+	registry             map[method]Tree
+	panicHandler         PanicHandler
+	routeNotFoundHandler http.HandlerFunc
 }
 
 func createRegistry() map[method]Tree {
@@ -90,7 +92,7 @@ func (r *router) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 
 	route, err := r.resolve(m, uri)
 	if err != nil {
-		r.handleError(err, writer)
+		r.handleError(writer, request, err)
 		return
 	}
 
@@ -101,16 +103,28 @@ func (r *router) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	route.handler(writer, request)
 }
 
-func (r *router) handleError(err error, writer http.ResponseWriter) {
+func (r *router) handleError(writer http.ResponseWriter, request *http.Request, err error) {
 	switch err.(type) {
 	case *routeNotFoundError:
 		writer.WriteHeader(http.StatusNotFound)
+
+		if r.routeNotFoundHandler != nil {
+			r.routeNotFoundHandler.ServeHTTP(writer, request)
+			return
+		}
 		return
 	default:
+		if r.panicHandler != nil {
+			r.panicHandler(writer, request, err)
+		}
 		return
 	}
 }
 
 func (r *router) OnPanic(handler PanicHandler) {
 	r.panicHandler = handler
+}
+
+func (r *router) OnRouteNotFound(handler http.HandlerFunc) {
+	r.routeNotFoundHandler = handler
 }

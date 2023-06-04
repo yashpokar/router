@@ -2,8 +2,13 @@ package tests
 
 import (
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
+)
+
+var (
+	ErrUnknown = errors.New("unknown error")
 )
 
 type MockResponseWriter struct {

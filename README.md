@@ -104,7 +104,7 @@ r := router.New()
 r.GET("/private", IPCollectorMiddleware(AuthenticationMiddleware(PrivateHandler)))
 ```
 
-## Panic Recover
+## Panic Recovery
 
 ```go
 
@@ -114,13 +114,23 @@ func PanicMaker(w http.ResponseWriter, r *http.Request) {
 }
 
 r := router.New()
-r.OnPanic(func(w http.ResponseWriter, r *http.Request, err any) {
-    w.WriteHeader(http.StatusInternalServerError)
-    w.Write([]byte("Internal server error."))
+r.OnPanic(func(writer http.ResponseWriter, request *http.Request, err any) {
+    writer.WriteHeader(http.StatusInternalServerError)
+    writer.Write([]byte("Internal server error."))
 
-    logger.Error(fmt.Sprintf("error occured at '%s'", r.RequestURI), err)
+    logger.Error(fmt.Sprintf("error occured at '%s'", request.RequestURI), err)
     // ...
 })
 
 r.GET("/panic/maker", PanicMaker)
+```
+
+## Custom 404 handler
+
+```go
+
+r := router.New()
+r.OnRouteNotFound(func(writer http.ResponseWriter, request *http.Request) {
+    w.Write([]byte(fmt.Sprintf("Whoop! Route '%s' not found.", request.RequestURI)))
+})
 ```

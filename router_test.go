@@ -2,6 +2,7 @@ package router
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -71,7 +72,7 @@ func TestRouter(t *testing.T) {
 	})
 
 	t.Run("handles general error", func(t *testing.T) {
-		r.handleError(errors.New("internal server error"), tests.NewMockResponseWriter())
+		r.handleError(tests.NewMockResponseWriter(), &http.Request{}, errors.New("internal server error"))
 	})
 
 	t.Run("resolves the route", func(t *testing.T) {
@@ -131,7 +132,7 @@ func TestRouter(t *testing.T) {
 		defer response.Body.Close()
 	})
 
-	t.Run("can not return the product id when it is not there", func(t *testing.T) {
+	t.Run("recovers from the panic", func(t *testing.T) {
 		r.GET("/panic-maker", tests.PanicMaker)
 		r.OnPanic(func(w http.ResponseWriter, _ *http.Request, r any) {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -146,5 +147,31 @@ func TestRouter(t *testing.T) {
 		assert.Equal(t, http.StatusInternalServerError, response.StatusCode)
 		assert.Equal(t, []byte("to test panic recovery"), bytes)
 		defer response.Body.Close()
+	})
+
+	t.Run("handles the not found route", func(t *testing.T) {
+		r.GET("/panic-maker", tests.PanicMaker)
+		r.OnRouteNotFound(func(writer http.ResponseWriter, request *http.Request) {
+			_, _ = writer.Write([]byte(fmt.Sprintf("route '%s' not found.", request.RequestURI)))
+		})
+
+		response, err := http.Get("http://localhost:8787/route/not/found")
+		assert.NoError(t, err)
+
+		bytes, err := io.ReadAll(response.Body)
+		assert.NoError(t, err)
+		assert.Equal(t, http.StatusNotFound, response.StatusCode)
+		assert.Equal(t, []byte("route '/route/not/found' not found."), bytes)
+		defer response.Body.Close()
+	})
+
+	t.Run("handles the default error when panic handler is provided", func(t *testing.T) {
+		r.OnPanic(func(_ http.ResponseWriter, _ *http.Request, err any) {
+			e, ok := err.(error)
+			assert.True(t, ok)
+			assert.EqualError(t, e, tests.ErrUnknown.Error())
+		})
+
+		r.handleError(tests.NewMockResponseWriter(), &http.Request{}, tests.ErrUnknown)
 	})
 }
