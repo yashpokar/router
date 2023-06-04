@@ -1,5 +1,7 @@
 # Router [![Build](https://github.com/yashpokar/router/actions/workflows/ci.yaml/badge.svg)](https://github.com/yashpokar/router/actions/workflows/ci.yaml)
-Go based lightweight http router.
+
+Lightweight http router written in go.
+No external dependencies are used.
 
 ## Basic Router
 
