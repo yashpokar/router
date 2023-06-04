@@ -42,3 +42,4 @@ issues:
         - funlen
         - noctx
         - gosec
+        - depguard
