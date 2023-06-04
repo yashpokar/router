@@ -29,7 +29,7 @@ func ProductDetailsHandler(w http.ResponseWriter, r *http.Request) {
 
 func TestRouter(t *testing.T) {
 	r := New().(*router)
-	server := &http.Server{Handler: r, Addr: ":8787", ReadHeaderTimeout: 3000}
+	server := &http.Server{Handler: r, Addr: ":8787"}
 	go func() {
 		err := server.ListenAndServe()
 		assert.NoError(t, err)

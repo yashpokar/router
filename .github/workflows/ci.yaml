@@ -22,9 +22,10 @@ jobs:
         with:
           go-version: '1.19'
 
-# TODO : make this working
-#      - name: 🧹 Lint
-#        run: make lint
+      - name: 🧹 Lint
+        run: |
+          go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.53.1
+          make lint
 
       - name: 🧪 Test
         run: make test

@@ -41,3 +41,4 @@ issues:
         - gomnd
         - funlen
         - noctx
+        - gosec

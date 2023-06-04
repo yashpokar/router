@@ -1,5 +1,5 @@
 GOLANGCI_BIN=$(GOBIN)/golangci-lint
-GOLANGCI_LINT_VERSION='1.51.2'
+GOLANGCI_LINT_VERSION='1.53.1'
 
 # Formatter to use; one of `gofmt`, `goimports`, or `golines`
 FORMATTER := gofmt

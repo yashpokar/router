@@ -14,9 +14,8 @@ func TestGroup(t *testing.T) {
 	api := r.Group("/api")
 
 	server := &http.Server{
-		Handler:           r,
-		Addr:              ":8989",
-		ReadHeaderTimeout: 1000,
+		Handler: r,
+		Addr:    ":8989",
 	}
 	go func() {
 		err := server.ListenAndServe()
@@ -53,7 +52,7 @@ func TestGroup(t *testing.T) {
 		usersGroup := v1.Group("/users")
 		usersGroup.GET("/", tests.Handler)
 
-		response, err := http.Get("http://localhost:8989/api/v1/users/")
+		response, err := http.Get("http://localhost:8989/api/v1/users")
 		assert.NoError(t, err)
 		assert.Equal(t, http.StatusOK, response.StatusCode)
 		defer response.Body.Close()
