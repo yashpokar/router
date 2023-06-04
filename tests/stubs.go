@@ -17,11 +17,11 @@ func (m MockResponseWriter) Header() http.Header {
 	return map[string][]string{}
 }
 
-func (m MockResponseWriter) Write(bytes []byte) (int, error) {
+func (m MockResponseWriter) Write(_ []byte) (int, error) {
 	return 0, nil
 }
 
-func (m MockResponseWriter) WriteHeader(statusCode int) {
+func (m MockResponseWriter) WriteHeader(_ int) {
 
 }
 
