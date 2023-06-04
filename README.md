@@ -1,4 +1,4 @@
-# Router [![Build](https://github.com/yashpokar/router/actions/workflows/ci.yaml/badge.svg?branch=master)](https://github.com/yashpokar/router/actions/workflows/ci.yaml)
+# Router [![Build](https://github.com/yashpokar/router/actions/workflows/ci.yaml/badge.svg)](https://github.com/yashpokar/router/actions/workflows/ci.yaml)
 Go based lightweight http router.
 
 ## Basic Router
