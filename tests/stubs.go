@@ -36,3 +36,7 @@ func Handler(w http.ResponseWriter, _ *http.Request) {
 		log.Fatal(err)
 	}
 }
+
+func PanicMaker(_ http.ResponseWriter, _ *http.Request) {
+	panic("to test panic recovery")
+}

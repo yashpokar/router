@@ -15,13 +15,17 @@ type RouteRegistrar interface {
 	Group(uri string) RouteRegistrar
 }
 
+type PanicHandler func(w http.ResponseWriter, r *http.Request, err any)
+
 type Router interface {
 	RouteRegistrar
+	OnPanic(handler PanicHandler)
 	ServeHTTP(writer http.ResponseWriter, request *http.Request)
 }
 
 type router struct {
-	registry map[method]Tree
+	registry     map[method]Tree
+	panicHandler PanicHandler
 }
 
 func createRegistry() map[method]Tree {
@@ -75,6 +79,12 @@ func (r *router) resolve(m method, uri string) (*route, error) {
 }
 
 func (r *router) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+	defer func() {
+		if e := recover(); e != nil && r.panicHandler != nil {
+			r.panicHandler(writer, request, e)
+		}
+	}()
+
 	uri := strings.Trim(request.RequestURI, pathSeparator)
 	m := stringToMethod(request.Method)
 
@@ -99,4 +109,8 @@ func (r *router) handleError(err error, writer http.ResponseWriter) {
 	default:
 		return
 	}
+}
+
+func (r *router) OnPanic(handler PanicHandler) {
+	r.panicHandler = handler
 }
